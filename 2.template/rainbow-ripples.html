@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rainbow Ripples</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        canvas {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // キャンバスサイズをウィンドウに合わせる
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // 波紋を管理する配列
+        let ripples = [];
+
+        // 波紋のクラス
+        class Ripple {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 0;
+                this.maxRadius = Math.max(canvas.width, canvas.height) * 0.4;
+                this.speed = 5;
+                this.hue = Math.random() * 360;
+                this.alpha = 1;
+            }
+
+            // 波紋を更新
+            update() {
+                this.radius += this.speed;
+                this.alpha = 1 - (this.radius / this.maxRadius);
+                return this.radius <= this.maxRadius;
+            }
+
+            // 波紋を描画
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `hsla(${this.hue}, 100%, 50%, ${this.alpha})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        // アニメーションループ
+        function animate() {
+            ctx.fillStyle = 'rgba(17, 17, 17, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 各波紋を更新・描画
+            ripples = ripples.filter(ripple => {
+                ripple.draw();
+                return ripple.update();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // クリックイベントで波紋を追加
+        canvas.addEventListener('click', (e) => {
+            for (let i = 0; i < 3; i++) {
+                ripples.push(new Ripple(e.clientX, e.clientY));
+            }
+        });
+
+        // タッチイベントのサポート
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            for (let i = 0; i < 3; i++) {
+                ripples.push(new Ripple(touch.clientX, touch.clientY));
+            }
+        }, false);
+
+        // マウス移動で小さな波紋を生成
+        let lastMove = 0;
+        canvas.addEventListener('mousemove', (e) => {
+            const now = Date.now();
+            if (now - lastMove > 50) {  // 50ミリ秒ごとに生成
+                ripples.push(new Ripple(e.clientX, e.clientY));
+                lastMove = now;
+            }
+        });
+
+        // アニメーション開始
+        animate();
+
+        // 初期波紋を生成
+        function createInitialRipples() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            for (let i = 0; i < 5; i++) {
+                ripples.push(new Ripple(
+                    centerX + (Math.random() - 0.5) * 100,
+                    centerY + (Math.random() - 0.5) * 100
+                ));
+            }
+        }
+        createInitialRipples();
+    </script>
+</body>
+</html>
